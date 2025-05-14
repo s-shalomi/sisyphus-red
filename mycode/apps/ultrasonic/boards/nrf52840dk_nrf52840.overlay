@@ -1,0 +1,22 @@
+/ {
+    grove_rgb {
+        compatible = "gpio-leds";
+        echo_pin: echo_pin {
+            gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>; 
+            label = "echo pin";
+        };
+        trigger_pin: trigger_pin {
+            gpios = <&gpio1 8 GPIO_ACTIVE_HIGH>;
+            label = "trigger pin";
+        };
+    };
+
+    aliases {
+        trigger = &trigger_pin;
+        echo = &echo_pin;
+    };
+};
+
+&gpio1 {
+    status = "okay";
+};

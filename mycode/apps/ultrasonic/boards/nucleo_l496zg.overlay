@@ -1,0 +1,24 @@
+/ {
+    aliases {
+        trigger = &trigger_pin;
+        echo = &echo_pin;
+    };
+
+    leds {
+        compatible = "gpio-leds";
+
+        echo_pin: echo_pin {
+            gpios = <&gpioc 0 GPIO_ACTIVE_HIGH>;
+            label = "Echo Pin";
+        };
+
+        trigger_pin: trigger_pin {
+            gpios = <&gpioc 3 GPIO_ACTIVE_HIGH>;
+            label = "Trigger Pin";
+        };
+    };
+};
+
+&gpioc {
+    status = "okay";
+};
