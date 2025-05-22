@@ -65,7 +65,7 @@ void recieve_packets(void)
 	err = bt_enable(NULL);
 	if (err) {
 		printk("Bluetooth init failed (err %d)\n", err);
-		return 0;
+		return;
 	}
 
 	(void)observer_start();

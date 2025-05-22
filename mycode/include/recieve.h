@@ -24,7 +24,7 @@ typedef struct packet_data {
 
 extern struct k_fifo packets_queue;
 
-extern struct data_item_t {
+struct data_item_t {
     void *fifo_reserved; /* 1st word reserved for use by FIFO */
     packet_data data;
 };

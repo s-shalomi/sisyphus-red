@@ -2,8 +2,8 @@
 
 PQueue* init_pqueue() {
     int inital_capacity = 256;
-    PQueue* pqueue = (PQueue*)malloc(sizeof(PQueue));
-    pqueue->entries = (Entry*)malloc(sizeof(Entry) * inital_capacity);
+    PQueue* pqueue = (PQueue*)k_malloc(sizeof(PQueue));
+    pqueue->entries = (Entry*)k_malloc(sizeof(Entry) * inital_capacity);
 
     pqueue->num_items = 0;
     pqueue->capacity = inital_capacity;
@@ -12,8 +12,8 @@ PQueue* init_pqueue() {
 
 void free_pqueue(PQueue* pqueue) {
     if (pqueue) {
-        free(pqueue->entries);
-        free(pqueue);
+        k_free(pqueue->entries);
+        k_free(pqueue);
     }
 }
 
@@ -23,7 +23,7 @@ void resize_pqueue(PQueue* pqueue) {
     pqueue->capacity = old_capacity * 2;
     
     Entry* old_entries = pqueue->entries;
-    Entry* new_entries = (Entry*)malloc(sizeof(Entry) * pqueue->capacity);
+    Entry* new_entries = (Entry*)k_malloc(sizeof(Entry) * pqueue->capacity);
     pqueue->entries = new_entries;
     pqueue->num_items = 0;
     memset(new_entries, 0, sizeof(Entry) * pqueue->capacity);
@@ -33,7 +33,7 @@ void resize_pqueue(PQueue* pqueue) {
         void* data = old_entries[i].data;
         insert_pqueue(pqueue, priority, data);
     }
-    free(old_entries);
+    k_free(old_entries);
 
 }
 
