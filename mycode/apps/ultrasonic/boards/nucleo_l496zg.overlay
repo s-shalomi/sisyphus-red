@@ -1,24 +1,44 @@
 / {
     aliases {
         trigger = &trigger_pin;
-        echo = &echo_pin;
+        echo1 = &echo_pin1;
+        echo2 = &echo_pin2;
+        servo = &servo_pin;
     };
 
     leds {
         compatible = "gpio-leds";
 
-        echo_pin: echo_pin {
+        echo_pin1: echo_pin1 {
             gpios = <&gpioc 0 GPIO_ACTIVE_HIGH>;
-            label = "Echo Pin";
+            label = "Echo Pin 1";
+        };
+
+        echo_pin2: echo_pin2 {
+            gpios = <&gpioc 3 GPIO_ACTIVE_HIGH>;
+            label = "Echo Pin 2";
         };
 
         trigger_pin: trigger_pin {
-            gpios = <&gpioc 3 GPIO_ACTIVE_HIGH>;
+            gpios = <&gpioc 1 GPIO_ACTIVE_HIGH>;
             label = "Trigger Pin";
+        };
+    };
+
+    pwmleds: pwmleds {
+        compatible = "pwm-leds";
+        status = "okay";
+
+        servo_pin: servo_pin {
+            pwms = <&pwm2 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
         };
     };
 };
 
 &gpioc {
+    status = "okay";
+};
+
+&pwm2 {
     status = "okay";
 };
