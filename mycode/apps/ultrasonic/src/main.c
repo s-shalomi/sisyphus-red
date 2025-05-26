@@ -50,10 +50,10 @@ static const struct pwm_dt_spec servo = PWM_DT_SPEC_GET(SERVO_NODE);
 // Thread stack size and priority
 #define ULTRA_STACK_SIZE 1024
 #define ULTRA_PRIORITY 5
-#define SERVO_STACK_SIZE 512
+#define SERVO_STACK_SIZE 1024
 #define SERVO_PRIORITY 5
 #define MAIN_STACK_SIZE 1024
-#define MAIN_PRIORITY 3
+#define MAIN_PRIORITY -1
 
 static struct k_thread ultra_thread_data;
 static struct k_thread servo_thread_data;
@@ -80,9 +80,9 @@ int angle;
  
 LOG_MODULE_REGISTER(ultrasonic_node, LOG_LEVEL_DBG);  
  
- // Broadcast distance (in centimeters)
- void broadcast_distance(uint16_t distance_cm, uint16_t angle)
- {
+// Broadcast distance (in centimeters)
+void broadcast_distance(uint16_t distance_cm, uint16_t angle)
+{
     uint8_t mfg_data[2];
  
     mfg_data[0] = (uint8_t)(distance_cm & 0xFF);
@@ -100,15 +100,13 @@ LOG_MODULE_REGISTER(ultrasonic_node, LOG_LEVEL_DBG);
  
     printk("Broadcasting: %d cm at %d degrees\n", distance_cm, angle);
  
-    k_msleep(1000);  // Broadcast for 1000 ms
- 
     err = bt_le_adv_stop();
     if (err) {
         LOG_ERR("Advertising failed to stop (err %d)\n", err);
     }
 }
  
-void initialise_bluetooth(void)
+static void initialise_bluetooth(void)
 {
     int err;
     LOG_DBG("Initialisation in process");
@@ -182,15 +180,15 @@ void servo_thread(void *a, void *b, void *c)
 {
     while (1) {
         // Sweep from 0° to 180°
-        for (angle = 0; angle <= 180; angle += 45) {
+        for (angle = 0; angle <= 180; angle += 15) {
             servo_set_angle(angle);
-            k_msleep(150);
+            k_msleep(200);
         }
 
         // Sweep from 180° back to 0°
-        for (angle = 180; angle >= 0; angle -= 45) {
+        for (angle = 180; angle >= 15; angle -= 15) {
             servo_set_angle(angle);
-            k_msleep(150);
+            k_msleep(200);
         }
 
         k_msleep(100);
@@ -209,12 +207,11 @@ void ultrasonic_thread(void *a, void *b, void *c)
             }
         }
 
-        k_msleep(400);
+        k_msleep(500);
     }
 }
  
 void start_ultrasonic_thread(void *a, void *b, void *c) {
-    ultrasonic_init();
  
     ultra_tid = k_thread_create(&ultra_thread_data, ultra_stack_area,
                                  K_THREAD_STACK_SIZEOF(ultra_stack_area),
@@ -230,6 +227,8 @@ void start_ultrasonic_thread(void *a, void *b, void *c) {
  
 int main(void)
 {
+    ultrasonic_init();
+
     main_tid = k_thread_create(&main_thread_data, main_stack_area,
                             K_THREAD_STACK_SIZEOF(main_stack_area),
                             start_ultrasonic_thread,
