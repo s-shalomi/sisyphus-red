@@ -1,28 +1,5 @@
-// c libraries
-#include <stdio.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <math.h>
-
-// standard zephyr
-#include <zephyr/init.h>
-#include <zephyr/kernel.h> 
-#include <zephyr/types.h>
-#include <zephyr/sys/util.h>
-#include <zephyr/device.h>
-#include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/sensor.h>
-
-// terminal
-#include <zephyr/shell/shell.h>
-#include <zephyr/sys/printk.h>
-
-// bluetooth
-#include <zephyr/bluetooth/bluetooth.h>
-#include <zephyr/bluetooth/gatt.h>
-#include <zephyr/bluetooth/hci.h>
-#include <zephyr/bluetooth/conn.h>
-#include <zephyr/bluetooth/uuid.h>
+// header file
+#include "mouse.h"
 
 // logging
 LOG_MODULE_REGISTER(position_tracker, LOG_LEVEL_DBG); 
@@ -292,25 +269,11 @@ void reception(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
     } else {
         LOG_INF("Connection initiated");
     }
-
-    // k_sleep(K_MSEC(500));
-}
-
-void initialise_bluetooth(void)
-{
-    int err;
-	LOG_DBG("Initialisation in process");
-	err = bt_enable(NULL);
-	if (err) {
-		LOG_ERR("Initialisation failed (err %d)", err);
-		return;
-	}
-	LOG_DBG("Initialisation successful");
 }
 
 void mouse_thread(void* arg1, void* arg2, void* arg3)
 {
-    initialise_bluetooth();
+    // initialise_bluetooth();
     initialise_button();
 
     conn_callbacks.connected = connected;
@@ -351,8 +314,3 @@ void create_mouse_thread(void)
         K_NO_WAIT                                       // start without waiting
     ); 
 }
-
-
-
-
-
