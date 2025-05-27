@@ -1,0 +1,1 @@
+.grid{display:grid;grid-template-columns:repeat(8,80px);grid-template-rows:repeat(6,80px);gap:1px;justify-content:center}.cell{width:40px;height:40px;background:#fff;border:1px solid #ccc}.start{background:#3cba54;color:#fff;font-weight:700}.end{background:#db3236;color:#fff;font-weight:700}.path{background:#6fa8dc}

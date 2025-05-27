@@ -1,0 +1,68 @@
+body {
+  background-color: #eed2e6;
+  font-family: 'Arial', sans-serif;
+  /* color: #fff; */
+}
+
+.app-container {
+  text-align: center;
+  padding: 2rem;
+}
+
+h1 {
+  color:#444;
+  margin-bottom: 1.5rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(8, 60px);
+  grid-template-rows: repeat(6, 60px);
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.cell {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.cell.start { background-color: #ffd93b; }
+.cell.end { background-color: #4caf50; }
+.cell.path { background-color: #2196f3; }
+.cell.obstacle { background-color: #f44336; }
+.cell.empty { background-color: #ffffff; }
+
+.info {
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: #555;
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.legend-box {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.legend-box.start { background-color: #ffd93b; }
+.legend-box.end { background-color: #4caf50; }
+.legend-box.path { background-color: #2196f3; }
+.legend-box.obstacle { background-color: #f44336; }
+.legend-box.empty { background-color: #ffffff; border: 1px solid #ccc; }

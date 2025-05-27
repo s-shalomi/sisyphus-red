@@ -24,6 +24,10 @@ struct node {
     bool visited;
 };
 
+extern struct point start;
+extern struct point end;
+extern int coords_given;
+
 extern void draw_map(void);
 
 

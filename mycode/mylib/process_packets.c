@@ -29,7 +29,7 @@ void processing(void) {
         // k_fifo_put(&car_info_queue, mem_ptr);
 
         if (found_obstacle % 30 == 0) {
-            printk("sending to redraw\n");
+            // printk("sending to redraw\n");
             
             // if obstacle detected, send info to pathfinding
             struct car_info obstacle_data;
@@ -54,7 +54,7 @@ void processing(void) {
         found_obstacle++;
 
 
-        printk("processing\n");
+        // printk("processing\n");
 
 
         k_sleep(K_MSEC(200));

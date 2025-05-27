@@ -13,17 +13,9 @@
 const int dx[NUM_NEIGHBORS] = {-1, -1, -1, 0, 0, 1, 1, 1};
 const int dy[NUM_NEIGHBORS] = {0, 1, -1, 1, -1, 0, 1, -1};
 
-int initial_map[ROWS][COLUMNS] = {
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1}
-};
-
-struct point start = {0, 1};
-struct point end = {5, 6};
+struct point start = {-1, -1};
+struct point end = {-1, -1}; 
+int coords_given = 0;
 
 // cell is valid if it is within the bounds of the map and not an obstacle
 bool is_valid_point(struct point pos, int map[ROWS][COLUMNS]) {
@@ -41,33 +33,48 @@ double get_heuristic(struct point pos, struct point end) {
 }
 
 void trace_path(struct node* end_node, struct point end, int map[ROWS][COLUMNS]) {
-    // int trace_size = 10;
     int size = 0; // '(x, y) >' - start with end pos
-    // char* path = (char*)k_malloc(sizeof(char) * size);
     char path[1024];
 
     int offset = 0;
 
     // from end node to start node
     struct node* current = end_node;
-    printf("Tracing path:\n");
     while (current != NULL) {
         offset += snprintf(path + offset, sizeof(path) - offset, "(%d, %d) > ", current->x, current->y);
         size += strlen(path);
-        // size += trace_size; // increase size for each node
-        // path = (char*)realloc(path, sizeof(char) * size);
         // map[current->x][current->y] = 2; // mark path with 2
         current = current->parent;
 
     }
     path[size] = '\0';
-    
+
     int i = 0;
+    printf("Path: {");
     while (path[i] != '\0') {
         printf("%c", path[i]);
         i++;
     }
-    printf("\n");
+    printf("}\n");
+
+    // print obstacle locations
+    char obstacles[1024];
+    offset = 0;
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = 0; j < COLUMNS; j++) {
+            if (map[i][j] == 0) { // obstacle
+                offset += snprintf(obstacles + offset, sizeof(obstacles) - offset, "(%d, %d) ", i, j);
+            }
+        }
+    }
+    obstacles[offset] = '\0';
+    printf("Obstacles: {");
+    i = 0;
+    while (obstacles[i] != '\0') {
+        printf("%c", obstacles[i]);
+        i++;
+    }
+    printf("}\n");
 
 }
 
@@ -186,40 +193,35 @@ void a_star_search(int map[ROWS][COLUMNS], struct point start, struct point end)
 
 
 void draw_map(void) {
-    printk("init draw\n");
-    printk("Map state with start %d %d and end %d %d\n", start.x, start.y, end.x, end.y);
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLUMNS; j++) {
-            if (i == start.x && j == start.y) {
-                printk(" S ");
-            } else if (i == end.x && j == end.y) {
-                printk(" E ");
-            } else {
-                printk(" %d ", initial_map[i][j]);
-            }
-        }
-        printk("\n");
+
+    int initial_map[ROWS][COLUMNS] = {
+        {1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1}
+    };
+
+    if (coords_given) {
+        a_star_search(initial_map, start, end);
+    } else {
+        printk("Error, start and end points not selected\n");
     }
-    a_star_search(initial_map, start, end);
+    
+
     while (1) {
         struct car_info_data_item_t *rx_data = k_fifo_get(&pathfinding_queue, K_FOREVER);
         initial_map[rx_data->data.obstacle_x][rx_data->data.obstacle_y] = 0;
         struct point car_pos = {.x = rx_data->data.car_x, .y = rx_data->data.car_y};
 
-        printk("Map state with start %d %d and end %d %d\n", car_pos.x, car_pos.y, end.x, end.y);
-        for (int i = 0; i < ROWS; i++) {
-            for (int j = 0; j < COLUMNS; j++) {
-                if (i == car_pos.x && j == car_pos.y) {
-                    printk(" S ");
-                } else if (i == end.x && j == end.y) {
-                    printk(" E ");
-                } else {
-                    printk(" %d ", initial_map[i][j]);
-                }
-            }
-            printk("\n");
+
+        if (coords_given) {
+            printk("Start point: (%d, %d)\n", start.x, start.y);
+            a_star_search(initial_map, car_pos, end);
+        } else {
+            printk("Error, start and end points not selected\n");
         }
-        a_star_search(initial_map, car_pos, end);
 		k_free(rx_data); // fifo gets pointer to memory location of tx_data
 
         k_sleep(K_MSEC(200));
