@@ -35,17 +35,17 @@ static const struct pwm_dt_spec servo = PWM_DT_SPEC_GET(SERVO_NODE);
  
 #define PWM_PERIOD_NS 20000000  // 20ms (50Hz)
 #define SERVO_MIN_PULSE_NS 1000000    
-#define SERVO_MAX_PULSE_NS 3000000
+#define SERVO_MAX_PULSE_NS 2000000
 
 #define WARNING_DIST 20 // Object warning distance
  
 // Thread stack size and priority
-#define ULTRA_STACK_SIZE 1024
-#define ULTRA_PRIORITY 5
-#define SERVO_STACK_SIZE 512
+#define ULTRA_STACK_SIZE 2048
+#define ULTRA_PRIORITY 4
+#define SERVO_STACK_SIZE 2048
 #define SERVO_PRIORITY 5
-#define MAIN_STACK_SIZE 1024
-#define MAIN_PRIORITY 3
+#define MAIN_STACK_SIZE 2048
+#define MAIN_PRIORITY -1
 
 static struct k_thread ultra_thread_data;
 static struct k_thread servo_thread_data;
@@ -72,9 +72,9 @@ int angle;
  
 LOG_MODULE_REGISTER(ultrasonic_node, LOG_LEVEL_DBG);  
  
- // Broadcast distance (in centimeters)
- void broadcast_distance(uint16_t distance_cm, uint16_t angle)
- {
+// Broadcast distance (in centimeters)
+void broadcast_distance(uint16_t distance_cm, uint16_t angle)
+{
     uint8_t mfg_data[2];
  
     mfg_data[0] = (uint8_t)(distance_cm & 0xFF);
