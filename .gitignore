@@ -9,7 +9,7 @@ mycode.tar
 
 .cache
 
-node_modules/
+**/node_modules/
 
 # Cache files, generates by Zephir
 .temp/
