@@ -87,6 +87,7 @@ void free_discovered_info(struct node* discovered_info[ROWS][COLUMNS]) {
 }
 
 void a_star_search(int map[ROWS][COLUMNS], struct point start, struct point end) {
+    printk("HERE---------------------------------------------------------------\n");
     // check start and end positions are valid
     if (!is_valid_point(start, map) || !is_valid_point(end, map)) {
         printk("Invalid start or end position\n");
@@ -130,7 +131,7 @@ void a_star_search(int map[ROWS][COLUMNS], struct point start, struct point end)
             discovered_info[i][j] = node;
         }
     }
-
+    printk("HERE---------------------------------------------------------------\n");
     while (get_pqueue_size(discovered_queue) > 0) {
         Entry entry = remove_pqueue_min(discovered_queue);
         struct node* curr_node = entry.data;
@@ -203,8 +204,15 @@ void draw_map(void) {
         {1, 1, 1, 1, 1, 1, 1, 1}
     };
 
+    struct point grid_start;
+    struct point grid_end;
+    grid_start.x = start.x / CELL_WIDTH;
+    grid_start.y = start.y / CELL_HEIGHT;
+    grid_end.x = end.x / CELL_WIDTH;
+    grid_end.y = end.y / CELL_HEIGHT;
+
     if (coords_given) {
-        a_star_search(initial_map, start, end);
+        a_star_search(initial_map, grid_start, grid_end);
     } else {
         printk("Error, start and end points not selected\n");
     }
@@ -217,8 +225,8 @@ void draw_map(void) {
 
 
         if (coords_given) {
-            printk("Start point: (%d, %d)\n", start.x, start.y);
-            a_star_search(initial_map, car_pos, end);
+            printk("Start point: (%d, %d)\n", grid_start.x, grid_start.y);
+            a_star_search(initial_map, car_pos, grid_end);
         } else {
             printk("Error, start and end points not selected\n");
         }

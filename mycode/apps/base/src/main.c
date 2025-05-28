@@ -17,17 +17,17 @@ void send_json(void) {
     // if obstacle detected, draw new path
     int count = 0;
     while (1) {
-        printk("json %d \n", count);
+        // printk("json %d \n", count);
         count++;
         k_sleep(K_MSEC(200));
     }
 }
 
 
-K_THREAD_DEFINE(process_id, STACKSIZE, processing, NULL, NULL, NULL, 5, 0, 0);
+K_THREAD_DEFINE(process_id, STACKSIZE * 2, processing, NULL, NULL, NULL, 5, 0, 0);
 K_THREAD_DEFINE(json_id, STACKSIZE, send_json, NULL, NULL, NULL, 6, 0, 0);
 K_THREAD_DEFINE(pathfinding_id, STACKSIZE * 2, draw_map, NULL, NULL, NULL, 7, 0, 0); // lower priority
-K_THREAD_DEFINE(recieve_id, STACKSIZE, recieve_packets, NULL, NULL, NULL, 4, 0, 0);
+K_THREAD_DEFINE(recieve_id, STACKSIZE * 4, recieve_packets, NULL, NULL, NULL, 4, 0, 0);
 
 // route (x,y) (x,y) - defines the start and end point for path
 static int cmd_get_map(const struct shell *sh, size_t argc, char **argv) {
@@ -57,9 +57,11 @@ static int cmd_get_map(const struct shell *sh, size_t argc, char **argv) {
     start.y = start_y;
     end.x = end_x;
     end.y = end_y;
+    kalman_init_x = start_x;
+    kalman_init_y = start_y;
     printk("Start point set to (%d, %d)\n", start.x, start.y);
     printk("End point set to (%d, %d)\n", end.x, end.y);
-
+    
     coords_given = 1;
     return 1;
 }

@@ -13,24 +13,27 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 
 	char addr_str[BT_ADDR_LE_STR_LEN];
 	bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
-	printk("Device found: %s (RSSI %d), type %u, AD data len %u\n",
-	       addr_str, rssi, type, ad->len);
+	// printk("Device found: %s (RSSI %d), type %u, AD data len %u\n",
+	//        addr_str, rssi, type, ad->len);
+	
+	// print advertisement data
+	printk("%d.%d, %d.%d\n", ad->data[2], ad->data[3],
+			ad->data[4], ad->data[5]);
 
 	// get data from advertisement and put in struct // TO DO
-	struct packet_data mobile_data;
-	memset(&mobile_data, 0, sizeof(mobile_data));
+	// struct packet_data mobile_data;
+	// memset(&mobile_data, 0, sizeof(mobile_data));
 
-	// send data to processing thread on a queue
-	struct data_item_t tx_data = {.data = mobile_data};
+	// // send data to processing thread on a queue
+	// struct data_item_t tx_data = {.data = mobile_data};
 
-	size_t size = sizeof(struct data_item_t);
-	char *mem_ptr = k_malloc(size); // create pointer to memory location
-	__ASSERT_NO_MSG(mem_ptr != 0); // ensure mem_ptr is valid
+	// size_t size = sizeof(struct data_item_t);
+	// char *mem_ptr = k_malloc(size); // create pointer to memory location
+	// __ASSERT_NO_MSG(mem_ptr != 0); // ensure mem_ptr is valid
 
-	memcpy(mem_ptr, &tx_data, size);
+	// memcpy(mem_ptr, &tx_data, size);
 
-	k_fifo_put(&packets_queue, mem_ptr);
-
+	// k_fifo_put(&packets_queue, mem_ptr);
 }
 
 int observer_start(void)

@@ -3,6 +3,8 @@
 
 #define ROWS 6
 #define COLUMNS 8
+#define CELL_WIDTH 10
+#define CELL_HEIGHT 10
 
 #define NUM_NEIGHBORS 8
 
