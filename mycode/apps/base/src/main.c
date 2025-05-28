@@ -3,6 +3,7 @@
 #include <zephyr/shell/shell.h>
 #include "process_packets.h"
 #include "pathfinding.h"
+#include "recieve.h"
 
 /* size of stack area used by each thread */
 #define STACKSIZE 1024
@@ -23,9 +24,10 @@ void send_json(void) {
 }
 
 
-K_THREAD_DEFINE(process_id, STACKSIZE, processing, NULL, NULL, NULL, PRIORITY, 0, 0);
-K_THREAD_DEFINE(json_id, STACKSIZE, send_json, NULL, NULL, NULL, PRIORITY, 0, 0);
-K_THREAD_DEFINE(pathfinding_id, STACKSIZE, draw_map, NULL, NULL, NULL, PRIORITY + 2, 0, 0); // lower priority
+K_THREAD_DEFINE(process_id, STACKSIZE, processing, NULL, NULL, NULL, 5, 0, 0);
+K_THREAD_DEFINE(json_id, STACKSIZE, send_json, NULL, NULL, NULL, 6, 0, 0);
+K_THREAD_DEFINE(pathfinding_id, STACKSIZE * 2, draw_map, NULL, NULL, NULL, 7, 0, 0); // lower priority
+K_THREAD_DEFINE(recieve_id, STACKSIZE, recieve_packets, NULL, NULL, NULL, 4, 0, 0);
 
 // route (x,y) (x,y) - defines the start and end point for path
 static int cmd_get_map(const struct shell *sh, size_t argc, char **argv) {

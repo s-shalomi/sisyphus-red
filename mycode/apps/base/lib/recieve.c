@@ -70,4 +70,8 @@ void recieve_packets(void)
 
 	(void)observer_start();
 
+	while (1) {
+		k_sleep(K_MSEC(1000));
+	}
+
 }

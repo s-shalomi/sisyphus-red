@@ -29,4 +29,6 @@ struct data_item_t {
     packet_data data;
 };
 
+extern void recieve_packets(void);
+
 #endif

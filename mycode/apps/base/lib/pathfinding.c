@@ -50,12 +50,12 @@ void trace_path(struct node* end_node, struct point end, int map[ROWS][COLUMNS])
     path[size] = '\0';
 
     int i = 0;
-    printf("Path: {");
+    printk("Path: {");
     while (path[i] != '\0') {
-        printf("%c", path[i]);
+        printk("%c", path[i]);
         i++;
     }
-    printf("}\n");
+    printk("}\n");
 
     // print obstacle locations
     char obstacles[1024];
@@ -68,13 +68,13 @@ void trace_path(struct node* end_node, struct point end, int map[ROWS][COLUMNS])
         }
     }
     obstacles[offset] = '\0';
-    printf("Obstacles: {");
+    printk("Obstacles: {");
     i = 0;
     while (obstacles[i] != '\0') {
-        printf("%c", obstacles[i]);
+        printk("%c", obstacles[i]);
         i++;
     }
-    printf("}\n");
+    printk("}\n");
 
 }
 
@@ -89,13 +89,13 @@ void free_discovered_info(struct node* discovered_info[ROWS][COLUMNS]) {
 void a_star_search(int map[ROWS][COLUMNS], struct point start, struct point end) {
     // check start and end positions are valid
     if (!is_valid_point(start, map) || !is_valid_point(end, map)) {
-        printf("Invalid start or end position\n");
+        printk("Invalid start or end position\n");
         return;
     }
 
     // check if at end position
     if (at_end(start, end)) {
-        printf("Already at end position\n");
+        printk("Already at end position\n");
         return;
     }
     
@@ -159,7 +159,7 @@ void a_star_search(int map[ROWS][COLUMNS], struct point start, struct point end)
             struct node* neighbour = discovered_info[nx][ny];
             
             if (neighbour == NULL) {
-                printf("Error\n");
+                printk("Error\n");
             }
 
             if (neighbour->visited) {
@@ -186,7 +186,7 @@ void a_star_search(int map[ROWS][COLUMNS], struct point start, struct point end)
         curr_node->visited = true;
     }
 
-    printf("No path found\n");
+    printk("No path found\n");
     free_pqueue(discovered_queue);
     free_discovered_info(discovered_info);
 }

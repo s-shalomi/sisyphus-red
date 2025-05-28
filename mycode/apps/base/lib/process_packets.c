@@ -10,11 +10,18 @@ int found_obstacle = 0;
 void processing(void) {
     k_fifo_init(&car_info_queue);
     k_fifo_init(&pathfinding_queue);
+    printk("processing\n");
+
     while (1) {
+        printk("processing\n");
 		// struct data_item_t *rx_data = k_fifo_get(&packets_queue, K_FOREVER);
         // process data
 
         // send processed data in queue
+		// k_free(rx_data); // fifo gets pointer to memory location of tx_data
+        
+
+
         // struct car_info processed_data;
         // memset(&processed_data, 0, sizeof(processed_data));
 
@@ -54,7 +61,6 @@ void processing(void) {
         found_obstacle++;
 
 
-        // printk("processing\n");
 
 
         k_sleep(K_MSEC(200));
