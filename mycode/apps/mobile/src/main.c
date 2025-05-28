@@ -8,7 +8,7 @@ int main(void)
 {
     initialise_bluetooth();
 
-    create_integration_thread();
+    // create_integration_thread();
     create_mouse_thread();
     create_ultrasonic_thread();
 }

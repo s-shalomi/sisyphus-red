@@ -5,6 +5,7 @@
 LOG_MODULE_REGISTER(position_tracker, LOG_LEVEL_DBG); 
 
 #define MOUSE_ADDR "D1:00:02:1F:03:24 (random)"
+static struct bt_uuid_16 my_hids_uuid = BT_UUID_INIT_16(0x1812);
 
 // bluetooth structures
 static struct bt_conn_cb conn_callbacks;
@@ -27,7 +28,7 @@ static enum discover_stage discovery_stage = DISCOVER_STAGE_SERVICE;
 volatile float current_x_mm = 0.0f;
 volatile float current_y_mm = 0.0f;
 
-#define DPI 600
+#define DPI 1000
 #define MM_PER_COUNT (25.4f / DPI)
 
 #define SW0_NODE	DT_ALIAS(sw0)
@@ -40,6 +41,25 @@ static struct gpio_callback button_cb_data;
 #define MOUSE_THREAD_PRIORITY 0
 K_THREAD_STACK_DEFINE(mouseThreadStack, MOUSE_THREAD_STACKSIZE); 
 struct k_thread mouseThreadData;
+
+// Parameters you can tweak
+#define BASE_SENSITIVITY 1.0f
+#define ACCEL_THRESHOLD 10.0f   // counts per report
+#define ACCEL_FACTOR 2.0f       // how much to multiply by at high speeds
+
+// Call this in your notify_func, after you get dx/dy and time since last report
+float apply_acceleration(int8_t dx, int8_t dy, float dt_seconds) {
+    float speed = sqrt(dx*dx + dy*dy) / dt_seconds; // counts per second
+
+    float scale = BASE_SENSITIVITY;
+
+    // If speed exceeds threshold, increase sensitivity (apply acceleration)
+    if (speed > ACCEL_THRESHOLD) {
+        scale *= ACCEL_FACTOR;
+    }
+    return scale;
+}
+
 
 void button_pressed(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
@@ -75,7 +95,59 @@ void initialise_button(void)
 
 	gpio_init_callback(&button_cb_data, button_pressed, BIT(button.pin));
 	gpio_add_callback(button.port, &button_cb_data);
-	printk("Set up button at %s pin %d\n", button.port->name, button.pin);
+	LOG_DBG("Set up button at %s pin %d\n", button.port->name, button.pin);
+}
+
+struct PositionSender {
+    int xInt;
+    int xFrac;
+    int yInt;
+    int yFrac;
+};
+
+static struct PositionSender positionSender = {
+    .xInt = 0,
+    .xFrac = 0,
+    .yInt = 0,
+    .yFrac = 0
+};
+
+const struct bt_le_adv_param adv_params = {
+    .options = BT_LE_ADV_OPT_USE_IDENTITY,
+    .interval_min = 0x00A0,
+    .interval_max = 0x00F0,
+    .peer = NULL
+};
+
+static void broadcast_position(void)
+{
+    uint8_t mfg_data[4];
+
+    mfg_data[0] = positionSender.xInt;
+    mfg_data[1] = positionSender.xFrac;
+    mfg_data[2] = positionSender.yInt;
+    mfg_data[3] = positionSender.yFrac;
+
+    struct bt_data mobileAd[] = {
+        BT_DATA(BT_DATA_MANUFACTURER_DATA, mfg_data, sizeof(mfg_data)),
+    };
+
+    int err; 
+
+    err = bt_le_adv_start(&adv_params, mobileAd, ARRAY_SIZE(mobileAd),
+                    NULL, 0);
+    if (err) {
+        LOG_ERR("Advertising failed to start (err %d)\n", err);
+        return;
+    }
+
+    k_msleep(100);
+
+    err = bt_le_adv_stop();
+    if (err) {
+        LOG_ERR("Advertising failed to stop (err %d)\n", err);
+        return;
+    }
 }
 
 static uint8_t notify_func(struct bt_conn *conn,
@@ -95,16 +167,30 @@ static uint8_t notify_func(struct bt_conn *conn,
     float dx_mm = dx * MM_PER_COUNT;
     float dy_mm = dy * MM_PER_COUNT;
 
-    current_x_mm += dx_mm;
-    current_y_mm += dy_mm;
+    static int64_t last_time = 0;
+    int64_t now = k_uptime_get();
+    float dt = (now - last_time) / 1000.0f; // dt in seconds
+    last_time = now;
+
+    float scale = apply_acceleration(dx_mm, dy_mm, dt);
+    float current_x_mm = dx_mm * scale;
+    float current_y_mm = dy_mm * scale;
 
     int currentxInt = (int) current_x_mm;
     int currentxFrac = abs((int) ((current_x_mm - currentxInt) * 1000));
     int currentyInt = (int) current_y_mm;
     int currentyFrac = abs((int) ((current_y_mm - currentyInt) * 1000));
 
-    // LOG_DBG("Mouse: dx=%d, dy=%d", dx, dy);
-    LOG_DBG("position: x: %d.%d y: %d.%d", currentxInt, currentxFrac, currentyInt, currentyFrac);
+    positionSender.xInt = currentxInt;
+    positionSender.xFrac = currentxFrac;
+    positionSender.yInt = currentyInt;
+    positionSender.yFrac = currentyFrac;
+
+    // LOG_DBG("position: x: %d.%d y: %d.%d", currentxInt, currentxFrac, currentyInt, currentyFrac);
+    printk("%d.%d, %d.%d\n", currentxInt, currentxFrac, currentyInt, currentyFrac);
+
+
+    // broadcast_position();
 
     return BT_GATT_ITER_CONTINUE;
 }
@@ -199,7 +285,6 @@ static uint8_t discover_func(struct bt_conn *conn,
     return BT_GATT_ITER_CONTINUE;
 }
 
-
 static void connected(struct bt_conn *conn, uint8_t err)
 {
     if (err) {
@@ -207,25 +292,43 @@ static void connected(struct bt_conn *conn, uint8_t err)
         return;
     }
     LOG_INF("Connected to mouse");
-    default_conn = bt_conn_ref(conn);
+
+    // // Zephyr example for 7.5–10 ms interval (fastest allowed by BLE spec)
+    // static struct bt_le_conn_param fast_params = {
+    //     .interval_min = 6,  // 7.5 ms (6 * 1.25 ms)
+    //     .interval_max = 8,  // 10 ms (8 * 1.25 ms)
+    //     .latency = 0,
+    //     .timeout = 400,
+    // };
+
+    // int kc = bt_conn_le_param_update(conn, &fast_params);
+    // if (kc) {
+    //     LOG_ERR("Param update failed (err %d)", kc);
+    // }
+
+    // default_conn = bt_conn_ref(conn);
 
 
     LOG_INF("Starting GATT discovery...");
 
     current_conn = bt_conn_ref(conn);
 
-    discover_params.uuid = BT_UUID_HIDS;
     discover_params.func = discover_func;
     discover_params.start_handle = 0x0001;
     discover_params.end_handle = 0xffff;
     discover_params.type = BT_GATT_DISCOVER_PRIMARY;
+    
+    // BT_UUID_DECLARE_16(BT_UUID_HIDS_VAL);
+    // discover_params.uuid = BT_UUID_HIDS;
+    discover_params.uuid = &my_hids_uuid;
+
+    k_sleep(K_MSEC(100));
 
     int rc = bt_gatt_discover(conn, &discover_params);
     if (rc) {
         LOG_ERR("Discover failed (err %d)", rc);
     }
 }
-
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
