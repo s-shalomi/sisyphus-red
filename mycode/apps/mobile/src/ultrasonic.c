@@ -1,6 +1,6 @@
 /*
  * Ultrasonic ranger driver main source file
- * This file will run the ultrasonic sensor for task 3 of prac 3
+ * This file will run the ultrasonic sensor
  * 
  * Functionality:
  * - Utilise CLI to measure object distance from sensor
@@ -8,8 +8,16 @@
  * REF: 
  * https://github.com/zephyrproject-rtos/zephyr/tree/main/
  */
-
-#include "ultrasonic.h"
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/pwm.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/shell/shell.h>
+#include <zephyr/sys/ring_buffer.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/hci.h>
  
 // Get the node identifiers using aliases
 #define TRIGGER_NODE  DT_ALIAS(trigger)
@@ -35,17 +43,17 @@ static const struct pwm_dt_spec servo = PWM_DT_SPEC_GET(SERVO_NODE);
  
 #define PWM_PERIOD_NS 20000000  // 20ms (50Hz)
 #define SERVO_MIN_PULSE_NS 1000000    
-#define SERVO_MAX_PULSE_NS 3000000
+#define SERVO_MAX_PULSE_NS 2600000
 
 #define WARNING_DIST 20 // Object warning distance
  
 // Thread stack size and priority
-#define ULTRA_STACK_SIZE 1024
+#define ULTRA_STACK_SIZE 2048
 #define ULTRA_PRIORITY 5
-#define SERVO_STACK_SIZE 512
-#define SERVO_PRIORITY 5
-#define MAIN_STACK_SIZE 1024
-#define MAIN_PRIORITY 3
+#define SERVO_STACK_SIZE 2048
+#define SERVO_PRIORITY 4
+#define MAIN_STACK_SIZE 2048
+#define MAIN_PRIORITY -1
 
 static struct k_thread ultra_thread_data;
 static struct k_thread servo_thread_data;
@@ -61,24 +69,26 @@ K_THREAD_STACK_DEFINE(main_stack_area, MAIN_STACK_SIZE);
 static k_tid_t main_tid;
 
 int angle;
+int objectBool; 
 
- // BLE Advertising params
- const struct bt_le_adv_param adv_params_distance = {
+// BLE Advertising params
+const struct bt_le_adv_param adv_params_distance = {
      .options = BT_LE_ADV_OPT_USE_IDENTITY,
      .interval_min = 0x00A0,
      .interval_max = 0x00F0,
      .peer = NULL
- };
+};
  
 LOG_MODULE_REGISTER(ultrasonic_node, LOG_LEVEL_DBG);  
  
- // Broadcast distance (in centimeters)
- void broadcast_distance(uint16_t distance_cm, uint16_t angle)
- {
-    uint8_t mfg_data[2];
- 
-    mfg_data[0] = (uint8_t)(distance_cm & 0xFF);
-    mfg_data[1] = (uint8_t)(angle & 0xFF);
+// Broadcast distance (in centimeters)
+void broadcast_distance(uint16_t objectBool, uint16_t distance_cm, uint16_t angle)
+{
+    uint8_t mfg_data[3];
+    
+    mfg_data[0] = (uint8_t)(objectBool & 0xFF);
+    mfg_data[1] = (uint8_t)(distance_cm & 0xFF);
+    mfg_data[2] = (uint8_t)(angle & 0xFF);
  
     struct bt_data ad[] = {
         BT_DATA(BT_DATA_MANUFACTURER_DATA, mfg_data, sizeof(mfg_data)),
@@ -90,16 +100,24 @@ LOG_MODULE_REGISTER(ultrasonic_node, LOG_LEVEL_DBG);
         return;
     }
  
-    printk("Broadcasting: %d cm at %d degrees\n", distance_cm, angle);
- 
-    k_msleep(1000);  // Broadcast for 1000 ms
- 
     err = bt_le_adv_stop();
     if (err) {
         LOG_ERR("Advertising failed to stop (err %d)\n", err);
     }
 }
-
+ 
+static void initialise_bluetooth(void)
+{
+    int err;
+    LOG_DBG("Initialisation in process");
+    err = bt_enable(NULL);
+    if (err) {
+        LOG_ERR("Initialisation failed (err %d)", err);
+        return;
+    }
+    LOG_DBG("Initialisation successful");
+}
+ 
 // Convert angle (0–180°) to pulse width and set PWM
 int servo_set_angle(uint8_t angle_deg)
 {
@@ -114,7 +132,6 @@ int servo_set_angle(uint8_t angle_deg)
     return pwm_set_dt(&servo, PWM_PERIOD_NS, pulse_ns);
 }
 
-
 static void ultrasonic_init(void)
 {
     if (!device_is_ready(trig.port) || 
@@ -127,7 +144,7 @@ static void ultrasonic_init(void)
     gpio_pin_configure_dt(&trig, GPIO_OUTPUT_INACTIVE);
     gpio_pin_configure_dt(&echo1, GPIO_INPUT);
 
-    // initialise_bluetooth();
+    initialise_bluetooth();
 }
  
 static uint32_t ultrasonic_measure(const struct gpio_dt_spec *echo_pin)
@@ -162,15 +179,15 @@ void servo_thread(void *a, void *b, void *c)
 {
     while (1) {
         // Sweep from 0° to 180°
-        for (angle = 0; angle <= 180; angle += 45) {
+        for (angle = 0; angle <= 180; angle += 15) {
             servo_set_angle(angle);
-            k_msleep(150);
+            k_msleep(500);
         }
 
         // Sweep from 180° back to 0°
-        for (angle = 180; angle >= 0; angle -= 45) {
+        for (angle = 180; angle >= 0; angle -= 15) {
             servo_set_angle(angle);
-            k_msleep(150);
+            k_msleep(500);
         }
 
         k_msleep(100);
@@ -181,21 +198,27 @@ void ultrasonic_thread(void *a, void *b, void *c)
 {
     while (1) {
         uint32_t dist1 = ultrasonic_measure(&echo1);
+        objectBool = 0;
 
         if (dist1 > 0) {
             if (dist1 <= WARNING_DIST) {
-                broadcast_distance(dist1, angle);
-                printk("Object detected: %d cm at %d degrees\n", dist1, angle);
+                objectBool = 1;     
+                if (objectBool) {
+                    broadcast_distance(objectBool, dist1, angle);
+                    printk("Obstacle near: %d cm at %d degrees\n", dist1, angle);
+                }
+            } else {
+                    printk("Obstacle not close: %d cm at %d degrees\n", dist1, angle);    
             }
         }
 
-        k_msleep(400);
+        k_msleep(500);
     }
 }
  
 void start_ultrasonic_thread(void *a, void *b, void *c) {
     ultrasonic_init();
- 
+
     ultra_tid = k_thread_create(&ultra_thread_data, ultra_stack_area,
                                  K_THREAD_STACK_SIZEOF(ultra_stack_area),
                                  ultrasonic_thread, NULL, NULL, NULL,
@@ -208,7 +231,7 @@ void start_ultrasonic_thread(void *a, void *b, void *c) {
                             SERVO_PRIORITY, 0, K_NO_WAIT);
 }
  
-void create_ultrasonic_thread(void)
+int main(void)
 {
     main_tid = k_thread_create(&main_thread_data, main_stack_area,
                             K_THREAD_STACK_SIZEOF(main_stack_area),
@@ -217,6 +240,6 @@ void create_ultrasonic_thread(void)
                             MAIN_PRIORITY, 0, K_NO_WAIT);
     LOG_INF("Ultrasonic sensor ready.\n");
  
-    return;
+    return 0;
 }
  

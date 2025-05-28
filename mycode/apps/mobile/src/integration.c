@@ -1,3 +1,4 @@
+// header file
 #include "integration.h"
 
 // integration thread
@@ -6,6 +7,7 @@
 K_THREAD_STACK_DEFINE(integrationThreadStack, INTEGRATION_THREAD_STACKSIZE); 
 struct k_thread integrationThreadData;
 
+// logging
 LOG_MODULE_REGISTER(info_integration, LOG_LEVEL_DBG); 
 
 void initialise_bluetooth(void)
@@ -20,13 +22,12 @@ void initialise_bluetooth(void)
 	LOG_DBG("Initialisation successful");
 }
 
+/*
+ observes the bluetooth signals that are inputted to the mobile node.
+ */
 void integration_thread(void* arg1, void* arg2, void* arg3) 
 {
-    for (;;) {
-        uint32_t time = k_uptime_get_32();
-        // printk("%d\n", time);
-        k_sleep(K_MSEC(100));
-    }
+    return;
 }
 
 void create_integration_thread(void)
