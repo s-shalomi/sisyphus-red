@@ -7,8 +7,10 @@
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/addr.h>
 
-#define MOBILE_ADDR "D9:C5:AF:3E:87:62" 
+#define MOBILE_ADDR "C4:BC:8A:CE:12:70" 
+#define SENSOR_ADDR "D9:C5:AF:3E:87:62" 
 #define MOBILE_ADDR_TYPE "random"
+#define SENSOR_ADDR_TYPE "random"
 
 typedef struct packet_data {
 	double displacement_x;
@@ -28,5 +30,7 @@ struct data_item_t {
     void *fifo_reserved; /* 1st word reserved for use by FIFO */
     packet_data data;
 };
+
+extern void recieve_packets(void);
 
 #endif

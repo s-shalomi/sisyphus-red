@@ -6,9 +6,9 @@ project(prac02)
 
 FILE(GLOB app_sources src/*.c)
 
-FILE(GLOB lib_sources ../../mylib/*.c)
+FILE(GLOB lib_sources lib/*.c)
 
 
 target_sources(app PRIVATE ${app_sources} ${lib_sources})
 
-target_include_directories(app PRIVATE ../../include)
+target_include_directories(app PRIVATE include/)

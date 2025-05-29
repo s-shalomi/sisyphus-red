@@ -22,5 +22,7 @@ struct car_info_data_item_t {
     struct car_info data;
 };
 
+extern float kalman_init_x;
+extern float kalman_init_y;
 
 #endif
