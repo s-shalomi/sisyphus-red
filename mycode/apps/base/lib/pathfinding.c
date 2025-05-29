@@ -10,8 +10,10 @@
 // adapted from https://www.geeksforgeeks.org/a-search-algorithm/
 
 
-const int dx[NUM_NEIGHBORS] = {-1, -1, -1, 0, 0, 1, 1, 1};
-const int dy[NUM_NEIGHBORS] = {0, 1, -1, 1, -1, 0, 1, -1};
+// const int dx[NUM_NEIGHBORS] = {-1, -1, -1, 0, 0, 1, 1, 1};
+// const int dy[NUM_NEIGHBORS] = {0, 1, -1, 1, -1, 0, 1, -1};
+const int dx[NUM_NEIGHBORS] = {-1, 1, 0, 0};  // Up, Down, Left, Right
+const int dy[NUM_NEIGHBORS] = {0, 0, -1, 1};
 
 struct point start = {-1, -1};
 struct point end = {-1, -1}; 
@@ -31,6 +33,7 @@ bool at_end(struct point pos, struct point end) {
 
 double get_heuristic(struct point pos, struct point end) {
     // Euclidean distance - move in any direction to goal
+    // return sqrt(pow(pos.x - end.x, 2) + pow(pos.y - end.y, 2));
     return sqrt(pow(pos.x - end.x, 2) + pow(pos.y - end.y, 2));
 }
 
@@ -167,7 +170,8 @@ void a_star_search(int map[ROWS][COLUMNS], struct point start, struct point end)
                 continue; // skip visited points
             }
 
-            float path_weight = curr_node->path_weight + ((dx[i] == 0 || dy[i] == 0) ? 1.0 : 1.414); // straight:1, diagonal: sqrt(2)
+            // float path_weight = curr_node->path_weight + ((dx[i] == 0 || dy[i] == 0) ? 1.0 : 1.414); // straight:1, diagonal: sqrt(2)
+            float path_weight = curr_node->path_weight + 1.0;
             float heuristic_weight = get_heuristic(neighbour_pos, end);
             float final_weight = path_weight + heuristic_weight;
             
@@ -185,6 +189,7 @@ void a_star_search(int map[ROWS][COLUMNS], struct point start, struct point end)
             }
         }
         curr_node->visited = true;
+
     }
 
     printk("No path found\n");
@@ -206,10 +211,10 @@ void draw_map(void) {
 
     struct point grid_start;
     struct point grid_end;
-    grid_start.x = start.x / CELL_WIDTH;
-    grid_start.y = start.y / CELL_HEIGHT;
-    grid_end.x = end.x / CELL_WIDTH;
-    grid_end.y = end.y / CELL_HEIGHT;
+    grid_start.x = start.x;
+    grid_start.y = start.y;
+    grid_end.x = end.x;
+    grid_end.y = end.y;
 
     if (coords_given) {
         a_star_search(initial_map, grid_start, grid_end);
@@ -224,18 +229,16 @@ void draw_map(void) {
             
             if (mode == MANUAL) {
                 printk("Manual mode\n");
-                coords_given = 0;
+                // coords_given = 0;
             } 
             prev_mode = mode;
         }
-        printk("drawing\n");
         struct car_info_data_item_t *rx_data = k_fifo_get(&pathfinding_queue, K_FOREVER);
-        initial_map[rx_data->data.obstacle_x][rx_data->data.obstacle_y] = 0;
-        struct point car_pos;
         
+        struct point car_pos;
         if (mode == AUTO) {
-            car_pos.x = rx_data->data.car_x / CELL_WIDTH;
-            car_pos.y = rx_data->data.car_y / CELL_HEIGHT;
+            car_pos.x = (rx_data->data.car_x);
+            car_pos.y = (rx_data->data.car_y);
         } else if (mode == MANUAL) {
             if (!coords_given) {
                 printk("Enter position");
@@ -246,22 +249,36 @@ void draw_map(void) {
             car_pos.x = start.x / CELL_WIDTH;
             car_pos.y = start.y / CELL_HEIGHT;
         }
+        printk("drawing\n");
 
-        // set obstacles
+        // // process obstacle data - add it to car position and divide by cell size
+        // if (rx_data->data.obstacle_detected) {
+        //     int obstacle_x = (car_pos.x + rx_data->data.obstacle_dist * cos(rx_data->data.obstacle_direction * M_PI / 180)) / CELL_WIDTH;
+        //     int obstacle_y = (car_pos.y + rx_data->data.obstacle_dist * sin(rx_data->data.obstacle_direction * M_PI / 180)) / CELL_HEIGHT;
+        //     if (obstacle_x < 0 || obstacle_x >= ROWS || obstacle_y < 0 || obstacle_y >= COLUMNS) {
+        //         printk("Obstacle out of bounds\n");
+        //         k_free(rx_data); // fifo gets pointer to memory location of tx_data
+        //         k_sleep(K_MSEC(200));
+        //         continue;
+        //     }
+        //     printk("Obstacle detected at (%d, %d)\n", obstacle_x, obstacle_y);
+        //     initial_map[obstacle_x][obstacle_y] = 0; // mark obstacle in map
+        // }
+
 
         if (coords_given) {
-            grid_end.x = end.x / CELL_WIDTH;
-            grid_end.y = end.y / CELL_HEIGHT;
+            grid_end.x = end.x;
+            grid_end.y = end.y;
             printk("pos %d %d %d %d\n", car_pos.x, car_pos.y, grid_end.x, grid_end.y);
             a_star_search(initial_map, car_pos, grid_end);
+            printk("HERE ----\n");
         } else {
             printk("Error, start and end points not selected\n");
         }
 		k_free(rx_data); // fifo gets pointer to memory location of tx_data
-
-        if (mode == MANUAL) {
-            coords_given = 0;
-        }
+        // if (mode == MANUAL) {
+        //     coords_given = 0;
+        // }
         k_sleep(K_MSEC(200));
     }
 }

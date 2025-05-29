@@ -3,10 +3,12 @@
 
 #define ROWS 6
 #define COLUMNS 8
-#define CELL_WIDTH 1
-#define CELL_HEIGHT 1
+#define CELL_WIDTH 50 // mm
+#define CELL_HEIGHT 50 // mm
 
-#define NUM_NEIGHBORS 8
+#define M_PI 3.14159265358979323846f
+
+#define NUM_NEIGHBORS 4
 
 #define INF 999999999999
 
