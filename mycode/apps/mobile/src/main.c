@@ -10,5 +10,5 @@ int main(void)
 
     // create_integration_thread();
     create_mouse_thread();
-    create_ultrasonic_thread();
+    // create_ultrasonic_thread();
 }
