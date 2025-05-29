@@ -114,10 +114,10 @@ void initialise_indicator(void)
 
 void broadcast(MotionState* state)
 {
-    int sxInt = (int) (state->sx);
-    int sxFrac = abs((int) ((state->sx - sxInt) * 100));
-    int syInt = (int) (state->sy);
-    int syFrac = abs((int) ((state->sy - syInt) * 100));
+    int8_t sxInt = (int8_t) (state->sx);
+    int8_t sxFrac = abs((int8_t) ((state->sx - sxInt) * 100));
+    int8_t syInt = (int8_t) (state->sy);
+    int8_t syFrac = abs((int8_t) ((state->sy - syInt) * 100));
     // int szInt = (int) (state->sz);
     // int szFrac = abs((int) ((state->sz - szInt) * 100));
 
@@ -158,8 +158,8 @@ float clean_target(float a) {
     if (fabsf(a) > ACCEL_THRESHOLD) {
         return a;
     } else {
-        kf.state_vector[2] = 0;
-        kf.state_vector[3] = 0;
+        // kf.state_vector[2] = 0;
+        // kf.state_vector[3] = 0;
         return 0.0f;
     }
 }
@@ -370,7 +370,7 @@ int main(void)
         float ax_global, ay_global;
         rotate_accel_to_global(ax, ay, &ax_global, &ay_global);
 
-        float accel[2] = {ax_global, ay_global};
+        float accel[2] = {-ax_global,- ay_global};
         kalman_predict(&kf, accel);
 
         zupt_if_stationary(&kf, ax_global, ay_global);

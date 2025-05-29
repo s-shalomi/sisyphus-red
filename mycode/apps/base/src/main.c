@@ -24,10 +24,10 @@ void send_json(void) {
 }
 
 
-K_THREAD_DEFINE(process_id, STACKSIZE * 2, processing, NULL, NULL, NULL, 5, 0, 0);
+K_THREAD_DEFINE(process_id, STACKSIZE * 5, processing, NULL, NULL, NULL, 5, 0, 0);
 K_THREAD_DEFINE(json_id, STACKSIZE, send_json, NULL, NULL, NULL, 6, 0, 0);
-K_THREAD_DEFINE(pathfinding_id, STACKSIZE * 2, draw_map, NULL, NULL, NULL, 7, 0, 0); // lower priority
-K_THREAD_DEFINE(recieve_id, STACKSIZE * 4, recieve_packets, NULL, NULL, NULL, 4, 0, 0);
+K_THREAD_DEFINE(pathfinding_id, STACKSIZE * 4, draw_map, NULL, NULL, NULL, 7, 0, 0); // lower priority
+K_THREAD_DEFINE(recieve_id, STACKSIZE * 5, recieve_packets, NULL, NULL, NULL, 4, 0, 0);
 
 // route (x,y) (x,y) - defines the start and end point for path
 static int cmd_get_map(const struct shell *sh, size_t argc, char **argv) {

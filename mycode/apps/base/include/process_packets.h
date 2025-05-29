@@ -4,15 +4,21 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 
+#define WEST 0
+#define NORTHWEST 1
+#define NORTH 2
+#define NORTHEAST 3
+#define EAST 4
+
 extern struct k_fifo car_info_queue;
 extern struct k_fifo pathfinding_queue;
 
 struct car_info {
     int obstacle_detected;
-    int obstacle_x;
-    int obstacle_y;
-    int car_x;
-    int car_y;
+    int obstacle_dist;
+    int obstacle_direction; // 0 = west, 1 = northwest, 2 = north, 3 = northeast, 4 = east
+    float car_x;
+    float car_y;
 };
 
 extern void processing(void);
