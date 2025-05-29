@@ -48,7 +48,7 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 		mobile_data.obstacle_detected = ad->data[2]; // 0 or 1
 		mobile_data.obstacle_dist = ad->data[3]; // distance in cm
 		mobile_data.obstacle_dir = ad->data[4]; // direction 0-4
-		printk("Mobile Data Received:\n");
+		// printk("Mobile Data Received:\n");
 		printk("Muse X: ");
 		print_float_rec("", mobile_data.mouse_x);
 		printk(", Mouse Y: ");

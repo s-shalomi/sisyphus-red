@@ -81,9 +81,15 @@ void processing(void) {
         // print_float("", y_est_combined);
         // printk("]\n");
 
+        printk("Muse X: ");
+		print_float("", -rx_data->data.mouse_x);
+		printk(", Mouse Y: ");
+		print_float("", -rx_data->data.mouse_y);
+        printk("\n");
 
-        float x_est_combined = -rx_data->data.mouse_x * 0.9 + rx_data->data.displacement_x * 0.1; // weighted average
-        float y_est_combined = -rx_data->data.mouse_y * 0.9 + rx_data->data.displacement_y * 0.1; // weighted average 
+
+        float x_est_combined = -rx_data->data.mouse_x * 1.0f;//+ rx_data->data.displacement_x * 0.1; // weighted average
+        float y_est_combined = -rx_data->data.mouse_y * 1.0f;// + rx_data->data.displacement_y * 0.1; // weighted average 
 
 
 
@@ -106,22 +112,22 @@ void processing(void) {
 
         if (rx_data->data.obstacle_detected) {
             processed_data.obstacle_detected = 1;
-            processed_data.obstacle_dist = 2; // to do /////////////////////
+            processed_data.obstacle_dist = rx_data->data.obstacle_dist; // to do /////////////////////
             processed_data.obstacle_direction = NORTH;
 
-            // if (obstacle_angle == 0) {
-            //     processed_data.obstacle_direction = WEST;
-            // } else if (obstacle_angle == 45 || obstacle_angle == 30 || obstacle_angle == 15) {
-            //     processed_data.obstacle_direction = NORTHWEST;
-            // } else if (obstacle_angle == 90) {
-            //     processed_data.obstacle_direction = NORTH;
-            // } else if (obstacle_angle == 105 || obstacle_angle == 120 || obstacle_angle == 135) {
-            //     processed_data.obstacle_direction = NORTHEAST;
-            // } else if (obstacle_angle == 180) {
-            //     processed_data.obstacle_direction = EAST;
-            // } else {
-            //     processed_data.obstacle_direction = -1; // invalid direction
-            // }
+            if (obstacle_angle == 0) {
+                processed_data.obstacle_direction = WEST;
+            } else if (obstacle_angle == 45 || obstacle_angle == 30 || obstacle_angle == 15) {
+                processed_data.obstacle_direction = NORTHWEST;
+            } else if (obstacle_angle == 90) {
+                processed_data.obstacle_direction = NORTH;
+            } else if (obstacle_angle == 105 || obstacle_angle == 120 || obstacle_angle == 135) {
+                processed_data.obstacle_direction = NORTHEAST;
+            } else if (obstacle_angle == 180) {
+                processed_data.obstacle_direction = EAST;
+            } else {
+                processed_data.obstacle_direction = -1; // invalid direction
+            }
         } else {
             processed_data.obstacle_detected = 0;
             processed_data.obstacle_dist = -1; // no obstacle

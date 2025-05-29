@@ -3,8 +3,8 @@
 
 #define ROWS 6
 #define COLUMNS 8
-#define CELL_WIDTH 50 // mm
-#define CELL_HEIGHT 50 // mm
+#define CELL_WIDTH 255 // mm
+#define CELL_HEIGHT 255 // mm
 
 #define M_PI 3.14159265358979323846f
 

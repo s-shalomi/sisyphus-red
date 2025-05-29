@@ -237,8 +237,8 @@ void draw_map(void) {
         
         struct point car_pos;
         if (mode == AUTO) {
-            car_pos.x = (rx_data->data.car_x);
-            car_pos.y = (rx_data->data.car_y);
+            car_pos.x = (rx_data->data.car_x) / CELL_HEIGHT;
+            car_pos.y = (rx_data->data.car_y) / CELL_HEIGHT;
         } else if (mode == MANUAL) {
             if (!coords_given) {
                 printk("Enter position");
@@ -246,24 +246,24 @@ void draw_map(void) {
                 k_sleep(K_MSEC(200));
                 continue;
             }
-            car_pos.x = start.x / CELL_WIDTH;
-            car_pos.y = start.y / CELL_HEIGHT;
+            car_pos.x = start.x;
+            car_pos.y = start.y;
         }
         printk("drawing\n");
 
-        // // process obstacle data - add it to car position and divide by cell size
-        // if (rx_data->data.obstacle_detected) {
-        //     int obstacle_x = (car_pos.x + rx_data->data.obstacle_dist * cos(rx_data->data.obstacle_direction * M_PI / 180)) / CELL_WIDTH;
-        //     int obstacle_y = (car_pos.y + rx_data->data.obstacle_dist * sin(rx_data->data.obstacle_direction * M_PI / 180)) / CELL_HEIGHT;
-        //     if (obstacle_x < 0 || obstacle_x >= ROWS || obstacle_y < 0 || obstacle_y >= COLUMNS) {
-        //         printk("Obstacle out of bounds\n");
-        //         k_free(rx_data); // fifo gets pointer to memory location of tx_data
-        //         k_sleep(K_MSEC(200));
-        //         continue;
-        //     }
-        //     printk("Obstacle detected at (%d, %d)\n", obstacle_x, obstacle_y);
-        //     initial_map[obstacle_x][obstacle_y] = 0; // mark obstacle in map
-        // }
+        // process obstacle data - add it to car position and divide by cell size
+        if (rx_data->data.obstacle_detected) {
+            int obstacle_x = (car_pos.x + rx_data->data.obstacle_dist * cos(rx_data->data.obstacle_direction * M_PI / 180)) / CELL_WIDTH;
+            int obstacle_y = (car_pos.y + rx_data->data.obstacle_dist * sin(rx_data->data.obstacle_direction * M_PI / 180)) / CELL_HEIGHT;
+            if (obstacle_x < 0 || obstacle_x >= ROWS || obstacle_y < 0 || obstacle_y >= COLUMNS) {
+                printk("Obstacle out of bounds\n");
+                k_free(rx_data); // fifo gets pointer to memory location of tx_data
+                k_sleep(K_MSEC(200));
+                continue;
+            }
+            printk("Obstacle detected at (%d, %d)\n", obstacle_x, obstacle_y);
+            initial_map[obstacle_x][obstacle_y] = 0; // mark obstacle in map
+        }
 
 
         if (coords_given) {
