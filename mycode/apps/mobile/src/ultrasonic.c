@@ -46,6 +46,7 @@ static const struct pwm_dt_spec servo = PWM_DT_SPEC_GET(SERVO_NODE);
 #define SERVO_MAX_PULSE_NS 2600000
 
 #define WARNING_DIST 20 // Object warning distance
+#define ULTRASONIC_FLAG 1 // For bluetooth transmission
  
 // Thread stack size and priority
 #define ULTRA_STACK_SIZE 2048
@@ -84,11 +85,12 @@ LOG_MODULE_REGISTER(ultrasonic_node, LOG_LEVEL_DBG);
 // Broadcast distance (in centimeters)
 void broadcast_distance(uint16_t objectBool, uint16_t distance_cm, uint16_t angle)
 {
-    uint8_t mfg_data[3];
+    uint8_t mfg_data[4];
     
-    mfg_data[0] = (uint8_t)(objectBool & 0xFF);
-    mfg_data[1] = (uint8_t)(distance_cm & 0xFF);
-    mfg_data[2] = (uint8_t)(angle & 0xFF);
+    mfg_data[0] = (uint8_t)(ULTRASONIC_FLAG & 0xFF);
+    mfg_data[1] = (uint8_t)(objectBool & 0xFF);
+    mfg_data[2] = (uint8_t)(distance_cm & 0xFF);
+    mfg_data[3] = (uint8_t)(angle & 0xFF);
  
     struct bt_data ad[] = {
         BT_DATA(BT_DATA_MANUFACTURER_DATA, mfg_data, sizeof(mfg_data)),
@@ -99,7 +101,9 @@ void broadcast_distance(uint16_t objectBool, uint16_t distance_cm, uint16_t angl
         LOG_ERR("Advertising failed to start (err %d)\n", err);
         return;
     }
- 
+    
+    k_msleep(200);
+
     err = bt_le_adv_stop();
     if (err) {
         LOG_ERR("Advertising failed to stop (err %d)\n", err);
@@ -144,7 +148,7 @@ static void ultrasonic_init(void)
     gpio_pin_configure_dt(&trig, GPIO_OUTPUT_INACTIVE);
     gpio_pin_configure_dt(&echo1, GPIO_INPUT);
 
-    initialise_bluetooth();
+    // initialise_bluetooth();
 }
  
 static uint32_t ultrasonic_measure(const struct gpio_dt_spec *echo_pin)
@@ -204,12 +208,12 @@ void ultrasonic_thread(void *a, void *b, void *c)
             if (dist1 <= WARNING_DIST) {
                 objectBool = 1;     
                 if (objectBool) {
-                    broadcast_distance(objectBool, dist1, angle);
-                    printk("Obstacle near: %d cm at %d degrees\n", dist1, angle);
+                    printk("Obstacle near: %d cm at %d degrees\n", dist1, angle); 
                 }
             } else {
-                    printk("Obstacle not close: %d cm at %d degrees\n", dist1, angle);    
+                    printk("Obstacle not close: %d cm at %d degrees\n", dist1, angle);
             }
+            broadcast_distance(objectBool, dist1, angle);
         }
 
         k_msleep(500);
@@ -230,16 +234,24 @@ void start_ultrasonic_thread(void *a, void *b, void *c) {
                             NULL, NULL, NULL,
                             SERVO_PRIORITY, 0, K_NO_WAIT);
 }
- 
-int main(void)
-{
+
+void create_ultrasonic_thread(void) {
     main_tid = k_thread_create(&main_thread_data, main_stack_area,
                             K_THREAD_STACK_SIZEOF(main_stack_area),
                             start_ultrasonic_thread,
                             NULL, NULL, NULL,
                             MAIN_PRIORITY, 0, K_NO_WAIT);
-    LOG_INF("Ultrasonic sensor ready.\n");
- 
-    return 0;
 }
+ 
+// int main(void)
+// {
+//     main_tid = k_thread_create(&main_thread_data, main_stack_area,
+//                             K_THREAD_STACK_SIZEOF(main_stack_area),
+//                             start_ultrasonic_thread,
+//                             NULL, NULL, NULL,
+//                             MAIN_PRIORITY, 0, K_NO_WAIT);
+//     LOG_INF("Ultrasonic sensor ready.\n");
+ 
+//     return 0;
+// }
  
