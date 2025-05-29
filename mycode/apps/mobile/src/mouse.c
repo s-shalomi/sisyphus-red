@@ -167,28 +167,6 @@ static void broadcast_position(void)
     }
 }
 
-void estimate_acceleration(float dx_mm, float dy_mm, float dt) {
-    // Compute acceleration for x and y
-    acceleration_x = (dx_mm - prev_dx_mm) / dt;
-    acceleration_y = (dy_mm - prev_dy_mm) / dt;
-
-    prev_dx_mm = dx_mm;
-    prev_dy_mm = dy_mm;
-}
-
-float scale_position_by_acceleration(float ax, float ay, float acc_threshold) {
-    float mag = sqrt(ax*ax + ay*ay);
-    // Example: scale between 0.7 and 1.3 based on mag
-    if (mag < acc_threshold) {
-        return 1.0f; // No scaling needed
-    }
-    // For large acceleration, clamp down the scale (reduce "jump")
-    float scale = 1.0f - 0.5f * ((mag - acc_threshold) / acc_threshold); // Example logic
-    if (scale < 0.7f) scale = 0.7f;
-    if (scale > 1.3f) scale = 1.3f;
-    return scale;
-}
-
 static uint8_t notify_func(struct bt_conn *conn,
                            struct bt_gatt_subscribe_params *params,
                            const void *data, uint16_t length)
