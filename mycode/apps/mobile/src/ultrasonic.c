@@ -18,6 +18,8 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/hci.h>
+
+#include "mouse.h"
  
 // Get the node identifiers using aliases
 #define TRIGGER_NODE  DT_ALIAS(trigger)
@@ -81,16 +83,22 @@ const struct bt_le_adv_param adv_params_distance = {
 };
  
 LOG_MODULE_REGISTER(ultrasonic_node, LOG_LEVEL_DBG);  
+
+
  
 // Broadcast distance (in centimeters)
 void broadcast_distance(uint16_t objectBool, uint16_t distance_cm, uint16_t angle)
 {
-    uint8_t mfg_data[4];
+    uint8_t mfg_data[7];
     
-    mfg_data[0] = (uint8_t)(ULTRASONIC_FLAG & 0xFF);
-    mfg_data[1] = (uint8_t)(objectBool & 0xFF);
-    mfg_data[2] = (uint8_t)(distance_cm & 0xFF);
-    mfg_data[3] = (uint8_t)(angle & 0xFF);
+    mfg_data[0] = (uint8_t)(objectBool & 0xFF);
+    mfg_data[1] = (uint8_t)(distance_cm & 0xFF);
+    mfg_data[2] = (uint8_t)(angle & 0xFF);
+
+    mfg_data[3] = positionSender.xInt;
+    mfg_data[4] = positionSender.xFrac;
+    mfg_data[5] = positionSender.yInt;
+    mfg_data[6] = positionSender.yFrac;
  
     struct bt_data ad[] = {
         BT_DATA(BT_DATA_MANUFACTURER_DATA, mfg_data, sizeof(mfg_data)),
@@ -200,6 +208,7 @@ void servo_thread(void *a, void *b, void *c)
  
 void ultrasonic_thread(void *a, void *b, void *c)
 {
+    k_sem_take(&connectedSem, K_FOREVER);
     while (1) {
         uint32_t dist1 = ultrasonic_measure(&echo1);
         objectBool = 0;

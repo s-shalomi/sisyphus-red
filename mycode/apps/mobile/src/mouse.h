@@ -29,3 +29,14 @@
 #include <zephyr/bluetooth/uuid.h>
 
 extern void create_mouse_thread(void);
+
+struct PositionSender {
+    int xInt;
+    int xFrac;
+    int yInt;
+    int yFrac;
+};
+
+extern struct PositionSender positionSender;
+
+extern struct k_sem connectedSem;

@@ -5,6 +5,9 @@
 // logging
 LOG_MODULE_REGISTER(position_tracker, LOG_LEVEL_DBG); 
 
+// semaphore
+K_SEM_DEFINE(connectedSem, 0, 1);
+
 #define MOUSE_ADDR "D1:00:02:1F:03:24 (random)"
 static struct bt_uuid_16 my_hids_uuid = BT_UUID_INIT_16(0x1812);
 
@@ -57,14 +60,7 @@ struct k_thread mouseThreadData;
 #define ACCEL_THRESHOLD 10.0f   // counts per report
 #define ACCEL_FACTOR 2.0f       // how much to multiply by at high speeds
 
-struct PositionSender {
-    int xInt;
-    int xFrac;
-    int yInt;
-    int yFrac;
-};
-
-static struct PositionSender positionSender = {
+struct PositionSender positionSender = {
     .xInt = 0,
     .xFrac = 0,
     .yInt = 0,
@@ -266,7 +262,7 @@ static uint8_t notify_func(struct bt_conn *conn,
     positionSender.yInt = (int) dy_mm;
     positionSender.yFrac = abs((int)((dy_mm - positionSender.yInt) * 1000));
 
-    broadcast_position();
+    // broadcast_position();
 
     print_state(&kf);
     // printk("dx: %d, dy: %d\n", dx, dy);
@@ -407,6 +403,8 @@ static void connected(struct bt_conn *conn, uint8_t err)
     if (rc) {
         LOG_ERR("Discover failed (err %d)", rc);
     }
+
+    k_sem_give(&connectedSem);
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
