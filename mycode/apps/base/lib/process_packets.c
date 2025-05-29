@@ -26,7 +26,7 @@ void processing(void) {
     printk("processing\n");
 
     while (kalman_init_x < 0 || kalman_init_y < 0) {
-        printk("invalid coordinates\n");
+        // printk("invalid coordinates\n");
         k_sleep(K_MSEC(200));
     }
 
@@ -56,15 +56,15 @@ void processing(void) {
         float obs[NUM_MEAS] = {kalman_init_x, kalman_init_y}; // simulated observation data
         kalman_update(&kf, obs);
         
-        printk("Kalman Filter State Estimate: [");
-        print_float("", kf.state_estimate[0]);
-        printk(", ");
-        print_float("", kf.state_estimate[1]);
-        printk(", ");
-        print_float("", kf.state_estimate[2]);
-        printk(", ");
-        print_float("", kf.state_estimate[3]);
-        printk("]\n");
+        // printk("Kalman Filter State Estimate: [");
+        // print_float("", kf.state_estimate[0]);
+        // printk(", ");
+        // print_float("", kf.state_estimate[1]);
+        // printk(", ");
+        // print_float("", kf.state_estimate[2]);
+        // printk(", ");
+        // print_float("", kf.state_estimate[3]);
+        // printk("]\n");
 
 
         
@@ -89,7 +89,7 @@ void processing(void) {
 
         // k_fifo_put(&car_info_queue, mem_ptr);
 
-        if (found_obstacle % 30 == 0) {
+        if (found_obstacle % 20 == 0) {
             // printk("sending to redraw\n");
             
             // if obstacle detected, send info to pathfinding

@@ -16,6 +16,8 @@ const int dy[NUM_NEIGHBORS] = {0, 1, -1, 1, -1, 0, 1, -1};
 struct point start = {-1, -1};
 struct point end = {-1, -1}; 
 int coords_given = 0;
+int mode = MANUAL;
+int prev_mode = MANUAL;
 
 // cell is valid if it is within the bounds of the map and not an obstacle
 bool is_valid_point(struct point pos, int map[ROWS][COLUMNS]) {
@@ -87,7 +89,6 @@ void free_discovered_info(struct node* discovered_info[ROWS][COLUMNS]) {
 }
 
 void a_star_search(int map[ROWS][COLUMNS], struct point start, struct point end) {
-    printk("HERE---------------------------------------------------------------\n");
     // check start and end positions are valid
     if (!is_valid_point(start, map) || !is_valid_point(end, map)) {
         printk("Invalid start or end position\n");
@@ -131,7 +132,6 @@ void a_star_search(int map[ROWS][COLUMNS], struct point start, struct point end)
             discovered_info[i][j] = node;
         }
     }
-    printk("HERE---------------------------------------------------------------\n");
     while (get_pqueue_size(discovered_queue) > 0) {
         Entry entry = remove_pqueue_min(discovered_queue);
         struct node* curr_node = entry.data;
@@ -219,19 +219,49 @@ void draw_map(void) {
     
 
     while (1) {
+        if (mode != prev_mode) {
+            printk("Mode changed\n");
+            
+            if (mode == MANUAL) {
+                printk("Manual mode\n");
+                coords_given = 0;
+            } 
+            prev_mode = mode;
+        }
+        printk("drawing\n");
         struct car_info_data_item_t *rx_data = k_fifo_get(&pathfinding_queue, K_FOREVER);
         initial_map[rx_data->data.obstacle_x][rx_data->data.obstacle_y] = 0;
-        struct point car_pos = {.x = rx_data->data.car_x, .y = rx_data->data.car_y};
+        struct point car_pos;
+        
+        if (mode == AUTO) {
+            car_pos.x = rx_data->data.car_x / CELL_WIDTH;
+            car_pos.y = rx_data->data.car_y / CELL_HEIGHT;
+        } else if (mode == MANUAL) {
+            if (!coords_given) {
+                printk("Enter position");
+		        k_free(rx_data); // fifo gets pointer to memory location of tx_data
+                k_sleep(K_MSEC(200));
+                continue;
+            }
+            car_pos.x = start.x / CELL_WIDTH;
+            car_pos.y = start.y / CELL_HEIGHT;
+        }
 
+        // set obstacles
 
         if (coords_given) {
-            printk("Start point: (%d, %d)\n", grid_start.x, grid_start.y);
+            grid_end.x = end.x / CELL_WIDTH;
+            grid_end.y = end.y / CELL_HEIGHT;
+            printk("pos %d %d %d %d\n", car_pos.x, car_pos.y, grid_end.x, grid_end.y);
             a_star_search(initial_map, car_pos, grid_end);
         } else {
             printk("Error, start and end points not selected\n");
         }
 		k_free(rx_data); // fifo gets pointer to memory location of tx_data
 
+        if (mode == MANUAL) {
+            coords_given = 0;
+        }
         k_sleep(K_MSEC(200));
     }
 }

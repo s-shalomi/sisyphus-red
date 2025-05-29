@@ -2,12 +2,17 @@
 
 struct k_fifo packets_queue;
 
+int got_mobile = 0;
+int got_sensor = 0;
+
 static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 			 struct net_buf_simple *ad)
 {
     bt_addr_le_t mobile_addr;
+    bt_addr_le_t sensor_addr;
     bt_addr_le_from_str(MOBILE_ADDR, MOBILE_ADDR_TYPE, &mobile_addr);
-    if (!bt_addr_le_eq(addr, &mobile_addr)) {
+    bt_addr_le_from_str(SENSOR_ADDR, SENSOR_ADDR_TYPE, &sensor_addr);
+    if (!bt_addr_le_eq(addr, &mobile_addr) && !bt_addr_le_eq(addr, &sensor_addr)) {
         return; // make sure device is mobile node else return
     }
 
@@ -17,10 +22,26 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 	//        addr_str, rssi, type, ad->len);
 	
 	// print advertisement data
-	printk("%d.%d, %d.%d\n", ad->data[2], ad->data[3],
-			ad->data[4], ad->data[5]);
+	
+	if (bt_addr_le_eq(addr, &mobile_addr)) {
+		got_mobile = 1;
+		printk("mobile\n");
+	} else if (bt_addr_le_eq(addr, &sensor_addr)) {
+		got_sensor = 1;
+		printk("sensor\n");
+		printk("%d.%d, %d.%d\n", ad->data[2], ad->data[3],
+				ad->data[4], ad->data[5]);
+	}
 
-	// get data from advertisement and put in struct // TO DO
+	if (!got_mobile || !got_sensor) {
+		return; // wait until both mobile and sensor data is received
+	}
+	// both mobile and sensor data received, reset flags
+	got_mobile = 0;
+	got_sensor = 0;
+	printk("Both mobile and sensor data received\n");
+
+	// get data from advertisement and put in struct // TO DO - accel d
 	// struct packet_data mobile_data;
 	// memset(&mobile_data, 0, sizeof(mobile_data));
 

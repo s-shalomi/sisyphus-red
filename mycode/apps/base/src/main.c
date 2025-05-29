@@ -66,5 +66,25 @@ static int cmd_get_map(const struct shell *sh, size_t argc, char **argv) {
     return 1;
 }
 
+// mode auto or mode man
+static int cmd_get_mode(const struct shell *sh, size_t argc, char **argv) {
+    if (argc != 2) {
+        shell_error(sh, "Invalid number of arguments");
+        return 0;
+    }
+
+    if (!strcmp(argv[1], "auto")) {
+        mode = AUTO;
+        printk("Auto mode enabled\n");
+    } else if (!strcmp(argv[1], "man")) {
+        mode = MANUAL;
+        printk("Manual mode enabled\n");
+    } else {
+        shell_error(sh, "Invalid mode. Use 'auto' or 'man'");
+        return 0;
+    }
+    return 1;
+}
 
 SHELL_CMD_ARG_REGISTER(route, NULL, "Defines the start and end point for path", cmd_get_map, 3, 3);
+SHELL_CMD_ARG_REGISTER(mode, NULL, "Defines if car position is from input for rc car", cmd_get_mode, 2, 2);
