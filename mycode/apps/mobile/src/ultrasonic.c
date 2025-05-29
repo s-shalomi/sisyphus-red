@@ -213,20 +213,18 @@ void ultrasonic_thread(void *a, void *b, void *c)
         uint32_t dist1 = ultrasonic_measure(&echo1);
         objectBool = 0;
 
-        if (dist1 > 0) {
-            if (dist1 <= WARNING_DIST) {
-                objectBool = 1;     
-                if (objectBool) {
-                    printk("Obstacle near: %d cm at %d degrees\n", dist1, angle); 
-                }
-            } else {
-                    printk("Obstacle not close: %d cm at %d degrees\n", dist1, angle);
+        if (dist1 <= WARNING_DIST) {
+            objectBool = 1;     
+            if (objectBool) {
+                printk("Obstacle near: %d cm at %d degrees\n", dist1, angle); 
             }
-            broadcast_distance(objectBool, dist1, angle);
-        }
-
-        k_msleep(500);
+        } else {
+            printk("Obstacle not close: %d cm at %d degrees\n", dist1, angle);
+        }  
+        broadcast_distance(objectBool, dist1, angle);   
     }
+        
+        k_msleep(500);
 }
  
 void start_ultrasonic_thread(void *a, void *b, void *c) {

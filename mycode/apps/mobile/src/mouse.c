@@ -181,33 +181,6 @@ static uint8_t notify_func(struct bt_conn *conn,
     int8_t dx = (int8_t)report[1];
     int8_t dy = (int8_t)report[3];
 
-    // printk("Report: ");
-    // for (int i = 0; i < length; ++i) {
-    //     printk("%d ", ((const uint8_t *)data)[i]);
-    // }
-    // printk("\n");
-
-
-    // TESTING REGION
-
-    // float base_gain_x = 1.0f;
-    // float base_gain_y = 1.0f;
-
-    // float gain_x = base_gain_x * fabsf(dx);
-    // float gain_y = base_gain_y * fabsf(dy);
-
-    // float dx_scaled = gain_x * fabsf(dx);
-    // if (dx < 0) dx_scaled = -dx_scaled;
-
-    // float dy_scaled = gain_y * fabsf(dy);
-    // if (dy < 0) dy_scaled = -dy_scaled;
-
-    // float dx_mm = dx_scaled * MM_PER_COUNT;
-    // float dy_mm = dy_scaled * MM_PER_COUNT;
-
-    // END TESTING REGION
-
-
     float dx_mm = dx * MM_PER_COUNT;
     float dy_mm = dy * MM_PER_COUNT;
 
@@ -234,11 +207,11 @@ static uint8_t notify_func(struct bt_conn *conn,
         return BT_GATT_ITER_CONTINUE;
     }
 
-    positionSender.xInt = (int) dx_mm;
-    positionSender.xFrac = abs((int)((dx_mm - positionSender.xInt) * 1000));
+    positionSender.xInt = (int) current_x;
+    positionSender.xFrac = abs((int)((current_x - positionSender.xInt) * 1000));
 
-    positionSender.yInt = (int) dy_mm;
-    positionSender.yFrac = abs((int)((dy_mm - positionSender.yInt) * 1000));
+    positionSender.yInt = (int) current_y;
+    positionSender.yFrac = abs((int)((current_y - positionSender.yInt) * 1000));
 
     // broadcast_position();
 

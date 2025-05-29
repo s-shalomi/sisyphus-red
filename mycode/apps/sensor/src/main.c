@@ -164,6 +164,19 @@ float clean_target(float a) {
     }
 }
 
+void zupt_if_stationary(KalmanFilter *kf, float ax_global, float ay_global) {
+    static int stationary_count = 0;
+    if (fabsf(ax_global) < ACCEL_THRESHOLD && fabsf(ay_global) < ACCEL_THRESHOLD) {
+        stationary_count++;
+        if (stationary_count > 5) { // e.g. stationary for 5 consecutive samples
+            kf->state_vector[2] = 0; // vx
+            kf->state_vector[3] = 0; // vy
+        }
+    } else {
+        stationary_count = 0;
+    }
+}
+
 static void fetch_and_display(const struct device *sensor, 
                               float* ax,
                               float* ay,
@@ -232,40 +245,19 @@ void kalman_predict(KalmanFilter *kf, float *accel) {
     memcpy(kf->state_vector, temp, sizeof(float) * STATE_SIZE);
 }
 
-void zupt_if_stationary(KalmanFilter *kf, float ax_global, float ay_global) {
-    if (fabsf(ax_global) < ACCEL_THRESHOLD)
-        kf->state_vector[2] = 0; // vx
-    if (fabsf(ay_global) < ACCEL_THRESHOLD)
-        kf->state_vector[3] = 0; // vy
-}
-
-
-
-
-
-// void update_displacement(MotionState* state, float ax, float ay, float az) 
-// {
-//     float dt_sec = state->dt / 1000.0f;
-
-//     ax = clean_target(ax);
-//     ay = clean_target(ay);
-//     az = clean_target(az);
-
-//     // Integrate acceleration to velocity
-//     state->vx = clean_target((state->vx + ax * dt_sec) * VELOCITY_DECAY);
-//     state->vy = clean_target((state->vy + ay * dt_sec) * VELOCITY_DECAY);
-//     state->vz = clean_target((state->vz + az * dt_sec) * VELOCITY_DECAY);
-
-//     // Integrate velocity to displacement
-//     state->sx += state->vx * dt_sec;
-//     state->sy += state->vy * dt_sec;
-//     state->sz += state->vz * dt_sec;
+// void zupt_if_stationary(KalmanFilter *kf, float ax_global, float ay_global) {
+//     if (fabsf(ax_global) < ACCEL_THRESHOLD)
+//         kf->state_vector[2] = 0; // vx
+//     if (fabsf(ay_global) < ACCEL_THRESHOLD)
+//         kf->state_vector[3] = 0; // vy
 // }
 
 void update_displacement2(MotionState* state, float ax, float ay) 
 {
     ax = clean_target(ax);
     ay = clean_target(ay);
+
+    // zupt_if_stationary(&kf, ax, ay);
 
     float measurement[2];
     float acceleration[2] = {ax, ay};
