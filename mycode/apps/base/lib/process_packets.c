@@ -81,15 +81,15 @@ void processing(void) {
         // print_float("", y_est_combined);
         // printk("]\n");
 
-        printk("Muse X: ");
+        printk("Mouse! X: ");
 		print_float("", -rx_data->data.mouse_x);
 		printk(", Mouse Y: ");
 		print_float("", -rx_data->data.mouse_y);
         printk("\n");
 
 
-        float x_est_combined = -rx_data->data.mouse_x * 1.0f;//+ rx_data->data.displacement_x * 0.1; // weighted average
-        float y_est_combined = -rx_data->data.mouse_y * 1.0f;// + rx_data->data.displacement_y * 0.1; // weighted average 
+        float x_est_combined = -rx_data->data.mouse_x * 99.9 + rx_data->data.displacement_x * 0.01; // weighted average
+        float y_est_combined = -rx_data->data.mouse_y * 99.9 + rx_data->data.displacement_y * 0.01; // weighted average 
 
 
 
