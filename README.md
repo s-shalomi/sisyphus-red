@@ -33,7 +33,7 @@ Flash with:
 Use ```screen /dev/ttyACM0 115200```  to access the CLI
 
 ## Web Dashboard - Local React Webpage with TagIO as a Server  
-- Once all nodes are running, run ```python3 mycode/apps/dash_data/dashboard.py``` on same PC as base node. Ensure the screen is closed before running this.
+- Run ```python3 mycode/apps/dash_data/dashboard.py``` on same PC as base node. Ensure the screen is closed before running this.
 - Enter the dashboard folder (```cd mycode/apps/dashboard```)
 - Run ```npm install```
 - Run ```npm run dev```
