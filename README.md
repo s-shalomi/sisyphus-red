@@ -17,14 +17,14 @@ View more information about the project [here](https://github.com/s-shalomi/sisy
 
 Each component must be built and flashed separately.
 
-## Base Node - NRF52840DK:
+## Base Node - NRF52840DK  
 Build with:   
 > ```west build -b nrf52840dk/nrf52840 mycode/apps/base -p```  
 
 Flash with:
 > ```west flash --runner jlink```
 
-### Base Node Commands:
+### Base Node Commands  
 - ```route (<start x-coord>,<start y-coord>) (<end x-coord>,<end y-coord>)```: defines the start and end points of the RC car. This command must be run for the base node to work.
 - ```mode <auto/man>```: Selects mode for the RC car.
 -   ```mode man``` is the default and allows for the start and end points to be defined via the CLI to find the shortest path between those points. Points must always be provided via CLI in this mode for the path to re-route.
@@ -32,7 +32,14 @@ Flash with:
 
 Use ```screen /dev/ttyACM0 115200```  to access the CLI
 
-## Mobile Node - NRF52840DK attached to RC car:
+## Web Dashboard - Local React Webpage with TagIO as a Server  
+- Once all nodes are running, run ```python3 mycode/apps/dash_data/dashboard.py``` on same PC as base node. Ensure the screen is closed before running this.
+- Enter the dashboard folder (```cd mycode/apps/dashboard```)
+- Run ```npm install```
+- Run ```npm run dev```
+- Open the localhost link to view the dashboard
+
+## Mobile Node - NRF52840DK attached to RC car  
 Build mobile node with:  
 >  ```west build -b nrf52840dk/nrf52840 --pristine auto mycode/apps/mobile```  
 
@@ -42,16 +49,9 @@ Flash mobile node with:
 View mobile node with:  
 > ```screen /dev/ttyACM0 115200```  
 
-## Ultrasonic Sensor:
+## Ultrasonic Sensor  
 
-## Accelerometer and Gyroscope:
-
-## Web Dashboard - Local React Webpage with TagIO as a Server:
-- Once all nodes are running, run ```python3 mycode/apps/dash_data/dashboard.py``` on same PC as base node. Ensure the screen is closed before running this.
-- Enter the dashboard folder (```cd mycode/apps/dashboard```)
-- Run ```npm install```
-- Run ```npm run dev```
-- Open the localhost link to view the dashboard
+## Accelerometer and Gyroscope  
 
 # sensor node: 
 build sensor node with:  
@@ -64,3 +64,5 @@ view sensor node with:
 > ```JLinkRTTLogger -Device nrf52832_xxaa A -RTTChannel 1 -if SWD -Speed 4000 ~/rtt.log```  
 > ```nc localhost 19021```  
 
+# Credits
+This project was a group collaboration between Rafay Anwar, Michael Mendoza and Senuri Panadura Arachchige.
