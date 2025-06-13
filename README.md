@@ -18,8 +18,8 @@ View more information about the project [here](https://github.com/s-shalomi/sisy
 Each component must be built and flashed separately.
 
 ## Base Node - NRF52840DK:
-Build with: 
-> ```west build -b nrf52840dk/nrf52840 mycode/apps/base -p```
+Build with:   
+> ```west build -b nrf52840dk/nrf52840 mycode/apps/base -p```  
 Flash with:
 > ```west flash --runner jlink```
 
@@ -27,7 +27,7 @@ Flash with:
 - ```route (<start x-coord>,<start y-coord>) (<end x-coord>,<end y-coord>)```: defines the start and end points of the RC car. This command must be run for the base node to work.
 - ```mode <auto/man>```: Selects mode for the RC car.
 -   ```mode man``` is the default and allows for the start and end points to be defined via the CLI to find the shortest path between those points. Points must always be provided via CLI in this mode for the path to re-route.
--     ```mode auto``` takes the position of the car as the start point and uses obstacle data found by the car to find the shortest path. Path re-routes automoatically based on the car's movements.
+-   ```mode auto``` takes the position of the car as the start point and uses obstacle data found by the car to find the shortest path. Path re-routes automoatically based on the car's movements.
 
 Use ```screen /dev/ttyACM0 115200```  to access the CLI
 
